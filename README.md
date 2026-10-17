@@ -2,6 +2,9 @@
 
 스마트시티와 융합기술 세미나 **과제2**: 지난 5년간 서울시 전세 가격 변화를 분석하고 Cloudflare로 발행.
 
+- 공개 사이트: https://seoul-rent-api-dvz.pages.dev
+- 저장소: https://github.com/ysh001-cmd/seoul_rent_api
+
 자치구·법정동을 고르면 서울 열린데이터광장 `tbLnOpendataRentV` API에서 접수연도 2022~2026년 자료를 가져와
 전세 거래만 골라 월별·연도별 평균 보증금, ㎡당 보증금, 변화율을 보여줍니다. 건물용도(아파트·연립다세대·단독다가구·오피스텔)로 거를 수 있습니다.
 
