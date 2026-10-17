@@ -5,6 +5,7 @@ const $ = (id) => document.getElementById(id);
 const form = $("form"), cggSel = $("cgg"), dongSel = $("dong"), usageSel = $("usage");
 let districts = {};
 let merged = null; // "YYYY-MM|건물용도" → [건수, 보증금 합, 면적 합]
+let coveredFrom = null; // 자료가 있는 첫 접수연도. 그 이전 계약연도는 늦게 신고된 일부 거래뿐이라 비교에서 뺀다
 let chart = null;
 
 // 만원 → "3억 2,000만원"
@@ -58,8 +59,9 @@ function render() {
   const total = yList.reduce((s, y) => s + years[y][0], 0);
   $("s-count").textContent = `${total.toLocaleString()}건`;
   const avg = (y) => years[y][1] / years[y][0];
-  if (yList.length) {
-    const [first, last] = [yList[0], yList.at(-1)];
+  const full = yList.filter((y) => y >= coveredFrom);
+  if (full.length) {
+    const [first, last] = [full[0], full.at(-1)];
     $("s-first-label").textContent = `${first}년 평균`;
     $("s-last-label").textContent = `${last}년 평균`;
     $("s-first").textContent = won(avg(first));
@@ -74,13 +76,13 @@ function render() {
   $("table").replaceChildren(...yList.map((y) => {
     const tr = document.createElement("tr");
     const [n, sum, area] = years[y];
-    for (const v of [`${y}년`, n.toLocaleString(), won(sum / n), `${(sum / area).toFixed(1)}만원`]) {
+    for (const v of [y < coveredFrom ? `${y}년 (일부)` : `${y}년`, n.toLocaleString(), won(sum / n), `${(sum / area).toFixed(1)}만원`]) {
       tr.append(Object.assign(document.createElement("td"), { textContent: v }));
     }
     return tr;
   }));
 
-  const labels = Object.keys(months).sort();
+  const labels = Object.keys(months).filter((ym) => +ym.slice(0, 4) >= coveredFrom).sort();
   const uses = Object.keys(COLORS).filter((u) => labels.some((ym) => months[ym][u]));
   const datasets = uses.map((u) => ({
     label: u,
@@ -112,6 +114,7 @@ form.addEventListener("submit", async (e) => {
 
   const results = await Promise.all(YEARS.map(fetchYear));
   merged = {};
+  coveredFrom = Math.min(...results.filter((r) => r.total > 0).map((r) => r.year));
   for (const r of results) {
     for (const [key, [n, sum, area]] of Object.entries(r.agg || {})) {
       const m = (merged[key] ??= [0, 0, 0]);
