@@ -1,9 +1,10 @@
 const YEARS = [2022, 2023, 2024, 2025, 2026];
+const MIN_TRADES = 30; // 이보다 적으면 연평균이 거래 몇 건에 크게 흔들림
 const COLORS = { 아파트: "#f26b1d", 연립다세대: "#2563eb", 단독다가구: "#16a34a", 오피스텔: "#9333ea" };
 
 const $ = (id) => document.getElementById(id);
 const form = $("form"), cggSel = $("cgg"), dongSel = $("dong"), usageSel = $("usage");
-let districts = {};
+let districts = []; // [[구코드, 구이름, [[동코드, 동이름], ...]], ...] 가나다순
 let merged = null; // "YYYY-MM|건물용도" → [건수, 보증금 합, 면적 합]
 let coveredFrom = null; // 자료가 있는 첫 접수연도. 그 이전 계약연도는 늦게 신고된 일부 거래뿐이라 비교에서 뺀다
 let chart = null;
@@ -21,12 +22,13 @@ function setStatus(text, isError = false) {
 }
 
 function fillDongs() {
-  dongSel.replaceChildren(...districts[cggSel.value].dongs.map(([code, name]) => new Option(name, code)));
+  const [, , dongs] = districts.find(([code]) => code === cggSel.value);
+  dongSel.replaceChildren(...dongs.map(([code, name]) => new Option(name, code)));
 }
 
 async function init() {
   districts = await (await fetch("dongs.json")).json();
-  cggSel.replaceChildren(...Object.entries(districts).map(([code, d]) => new Option(d.name, code)));
+  cggSel.replaceChildren(...districts.map(([code, name]) => new Option(name, code)));
   fillDongs();
 }
 
@@ -69,8 +71,12 @@ function render() {
     const change = (avg(last) / avg(first) - 1) * 100;
     $("s-change").textContent = first === last ? "-" : `${change > 0 ? "+" : ""}${change.toFixed(1)}%`;
     $("s-change").className = first === last ? "" : change >= 0 ? "up" : "down";
+    const few = [first, last].filter((y) => years[y][0] < MIN_TRADES);
+    $("warn").hidden = !few.length;
+    $("warn").textContent = `※ ${few.map((y) => `${y}년 전세 ${years[y][0]}건`).join(", ")}: 거래가 ${MIN_TRADES}건 미만이라 평균·변화율이 몇 건의 거래에 크게 좌우됩니다. 해석에 주의하세요.`;
   } else {
     for (const id of ["s-first", "s-last", "s-change"]) $(id).textContent = "-";
+    $("warn").hidden = true;
   }
 
   $("table").replaceChildren(...yList.map((y) => {

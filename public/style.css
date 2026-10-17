@@ -71,6 +71,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .stat strong { font-size: 22px; }
 #s-change.up { color: var(--orange); }
 #s-change.down { color: #2563eb; }
+.warn { margin: -4px 0 16px; padding: 10px 14px; border-radius: 10px; background: var(--orange-soft); color: #9a3c06; font-size: 14px; }
 
 .chart { position: relative; height: 360px; }
 
