@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>서울 전세가 5년 변화</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">스마트시티와 융합기술 세미나 · 과제2</p>
+      <h1>서울 전세가 5년 변화</h1>
+      <p class="lead">자치구와 법정동을 고르면 서울 열린데이터광장 API에서 2022~2026년 전월세 자료를 가져와 전세 보증금 변화를 보여줍니다.</p>
+    </header>
+
+    <form id="form" class="card controls">
+      <label>자치구
+        <select id="cgg" required></select>
+      </label>
+      <label>법정동
+        <select id="dong" required></select>
+      </label>
+      <label>건물용도
+        <select id="usage">
+          <option value="">전체</option>
+          <option>아파트</option>
+          <option>연립다세대</option>
+          <option>단독다가구</option>
+          <option>오피스텔</option>
+        </select>
+      </label>
+      <button id="submit" type="submit">조회</button>
+    </form>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+
+    <section id="result" hidden>
+      <div class="stats">
+        <div class="card stat"><span>전세 거래</span><strong id="s-count">-</strong></div>
+        <div class="card stat"><span id="s-first-label">첫 해 평균</span><strong id="s-first">-</strong></div>
+        <div class="card stat"><span id="s-last-label">최근 평균</span><strong id="s-last">-</strong></div>
+        <div class="card stat"><span>변화율</span><strong id="s-change">-</strong></div>
+      </div>
+
+      <div class="card">
+        <h2>월별 평균 전세 보증금</h2>
+        <div class="chart"><canvas id="chart" aria-label="월별 평균 전세 보증금 선 그래프" role="img"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h2>연도별 요약 <small>(계약일 기준)</small></h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>계약연도</th><th>전세 건수</th><th>평균 보증금</th><th>㎡당 보증금</th></tr></thead>
+            <tbody id="table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card notes">
+        <h2>자료 수집 현황 <small>(접수연도별 API 응답)</small></h2>
+        <ul id="coverage"></ul>
+      </div>
+    </section>
+
+    <footer>
+      <p>자료: 서울 열린데이터광장 「서울시 부동산 전월세가 정보」(tbLnOpendataRentV). 전세(RENT_SE=전세) 거래만 집계, 금액 단위 만원.
+        동은 API가 제공하는 <b>법정동</b> 기준입니다.</p>
+    </footer>
+  </main>
+</body>
+</html>
