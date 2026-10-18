@@ -8,6 +8,9 @@ let districts = []; // [[구코드, 구이름, [[동코드, 동이름], ...]], .
 let merged = null; // "YYYY-MM|건물용도" → [건수, 보증금 합, 면적 합]
 let coveredFrom = null; // 자료가 있는 첫 접수연도. 그 이전 계약연도는 늦게 신고된 일부 거래뿐이라 비교에서 뺀다
 let chart = null;
+const MAP_COLORS = ["#fee6ce", "#fdd0a2", "#fdae6b", "#fd8d3c", "#e6550d", "#a63603"];
+let geo = null;  // 지도 법정동 레이어
+let breaks = []; // 색 구간 경계(만원), 거래 5건 이상인 동의 6분위
 
 // 만원 → "3억 2,000만원"
 function won(man) {
@@ -30,6 +33,63 @@ async function init() {
   districts = await (await fetch("dongs.json")).json();
   cggSel.replaceChildren(...districts.map(([code, name]) => new Option(name, code)));
   fillDongs();
+  await initMap().catch(() => ($("map").textContent = "지도를 불러오지 못했습니다."));
+}
+
+const fillColor = (p) => (p.n < 5 ? "#e5e5e5" : MAP_COLORS[breaks.filter((b) => p.avg >= b).length]);
+const roundWon = (man) => won(Math.round(man / 1000) * 1000); // 범례용: 천만원 단위
+
+async function initMap() {
+  const data = await (await fetch("map.geojson")).json();
+  const avgs = data.features.map((f) => f.properties).filter((p) => p.n >= 5).map((p) => p.avg).sort((a, b) => a - b);
+  breaks = [1, 2, 3, 4, 5].map((i) => avgs[Math.floor((avgs.length * i) / 6)]);
+
+  const map = L.map("map", { scrollWheelZoom: false, zoomSnap: 0.25 });
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors",
+    maxZoom: 16,
+  }).addTo(map);
+  geo = L.geoJSON(data, {
+    style: (f) => ({ color: "#fff", weight: 0.7, fillColor: fillColor(f.properties), fillOpacity: 0.8 }),
+    onEachFeature: (f, layer) => {
+      const p = f.properties;
+      const gu = districts.find(([code]) => code === p.cgg)?.[1] ?? "";
+      layer.bindTooltip(`<b>${gu} ${p.name}</b><br>${p.n ? `평균 ${won(p.avg)} · 전세 ${p.n.toLocaleString()}건` : "2026년 전세 거래 없음"}`, { sticky: true });
+      layer.on("click", () => selectDong(p.cgg, p.dong));
+    },
+  }).addTo(map);
+  map.fitBounds(geo.getBounds());
+
+  const legend = L.control({ position: "bottomright" });
+  legend.onAdd = () => {
+    const div = L.DomUtil.create("div", "legend");
+    div.innerHTML = MAP_COLORS.map((c, i) => `<i style="background:${c}"></i>${i ? `${roundWon(breaks[i - 1])} 이상` : `${roundWon(breaks[0])} 미만`}`).join("<br>")
+      + '<br><i style="background:#e5e5e5"></i>거래 5건 미만';
+    return div;
+  };
+  legend.addTo(map);
+  highlight();
+}
+
+// 선택된 동 테두리 강조
+function highlight() {
+  geo?.eachLayer((layer) => {
+    const p = layer.feature.properties;
+    const on = p.cgg === cggSel.value && p.dong === dongSel.value;
+    layer.setStyle(on ? { color: "#1f2430", weight: 3 } : { color: "#fff", weight: 0.7 });
+    if (on) layer.bringToFront();
+  });
+}
+
+function selectDong(cgg, dong) {
+  cggSel.value = cgg;
+  fillDongs();
+  if (![...dongSel.options].some((o) => o.value === dong)) {
+    highlight();
+    return setStatus("이 동은 전월세 거래 자료가 없어 조회할 수 없습니다.");
+  }
+  dongSel.value = dong;
+  form.requestSubmit();
 }
 
 async function fetchYear(year) {
@@ -115,6 +175,7 @@ function render() {
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   $("submit").disabled = true;
+  highlight();
   const place = `${cggSel.selectedOptions[0].text} ${dongSel.selectedOptions[0].text}`;
   setStatus(`${place}의 2022~2026년 자료를 가져오는 중입니다… (거래가 많은 동은 30초 이상 걸릴 수 있어요)`);
 
@@ -144,6 +205,7 @@ form.addEventListener("submit", async (e) => {
   $("submit").disabled = false;
 });
 
-cggSel.addEventListener("change", fillDongs);
+cggSel.addEventListener("change", () => (fillDongs(), highlight()));
+dongSel.addEventListener("change", highlight);
 usageSel.addEventListener("change", () => merged && render());
 init().catch(() => setStatus("동 목록을 불러오지 못했습니다.", true));

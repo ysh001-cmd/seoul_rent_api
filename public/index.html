@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>서울 전세가 5년 변화</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <script src="app.js" defer></script>
 </head>
@@ -34,6 +36,11 @@
       </label>
       <button id="submit" type="submit">조회</button>
     </form>
+
+    <div class="card">
+      <h2>서울 법정동별 평균 전세가 <small>(2026년 접수분, 동을 클릭하면 5년 추이 조회)</small></h2>
+      <div id="map" class="map" role="region" aria-label="서울 법정동 지도"></div>
+    </div>
 
     <p id="status" class="status" role="status" aria-live="polite"></p>
 
@@ -69,7 +76,8 @@
 
     <footer>
       <p>자료: 서울 열린데이터광장 「서울시 부동산 전월세가 정보」(tbLnOpendataRentV). 전세(RENT_SE=전세) 거래만 집계, 금액 단위 만원.
-        동은 API가 제공하는 <b>법정동</b> 기준입니다.</p>
+        동은 API가 제공하는 <b>법정동</b> 기준입니다.<br>
+        지도: VWorld 법정동 경계(2026-09), 색은 2026년 접수 전세 거래 평균(강의 자료 seoul_rent_2026.csv 집계).</p>
     </footer>
   </main>
 </body>

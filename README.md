@@ -7,17 +7,20 @@
 
 자치구·법정동을 고르면 서울 열린데이터광장 `tbLnOpendataRentV` API에서 접수연도 2022~2026년 자료를 가져와
 전세 거래만 골라 월별·연도별 평균 보증금, ㎡당 보증금, 변화율을 보여줍니다. 건물용도(아파트·연립다세대·단독다가구·오피스텔)로 거를 수 있습니다.
+서울 전역 법정동 지도는 2026년 동별 평균 전세가로 색칠되어 있고, 동을 클릭하면 바로 조회합니다.
 
 ## 구조
 
 ```text
-public/            정적 화면 (index.html, style.css, app.js, dongs.json)
+public/            정적 화면 (index.html, style.css, app.js, dongs.json, map.geojson)
 functions/api/rent.js   Cloudflare Pages Function: API 키로 서울시 API 호출 → 집계 결과만 반환
 test.mjs           node test.mjs : 가짜 API 응답으로 rent.js 점검
+scripts/build_map.py    map.geojson 생성 (법정동 경계 + 2026년 동별 평균 전세가)
 ```
 
 - API 키는 브라우저로 내려가지 않습니다. 서버 함수가 환경변수 `SEOUL_API_KEY`로만 호출합니다.
 - `dongs.json`(25개 구, 403개 법정동)은 lecture02의 `seoul_rent_2026.csv`에서 만든 목록입니다.
+- `map.geojson`은 eTL 6주차 `LSMD_ADM_SECT_UMD_서울.zip`(VWorld 법정동 경계, 2026-09)을 20m 단순화한 것이고, 색은 같은 CSV의 2026년 접수 전세 평균입니다. 배경지도는 Esri Light Gray(키 불필요)입니다.
 - 화면의 "동"은 API가 주는 **법정동**(`STDG_NM`)입니다. 과제 문구의 행정동과 다릅니다.
 - **데이터 한계:** 2026-10-17 확인 기준 이 API는 접수연도 2024년부터만 자료가 있습니다(2022·2023 요청은 "해당 데이터 없음").
   앱은 5개 연도를 모두 요청하고, 없는 연도는 "자료 수집 현황"에 그대로 표시합니다.

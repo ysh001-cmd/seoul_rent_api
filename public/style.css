@@ -75,6 +75,10 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .chart { position: relative; height: 360px; }
 
+.map { height: 520px; border-radius: 10px; background: #f3f3f1; }
+.legend { background: #fff; padding: 8px 10px; border-radius: 8px; font-size: 12px; line-height: 1.7; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.legend i { display: inline-block; width: 14px; height: 14px; margin-right: 6px; vertical-align: -2px; border-radius: 3px; }
+
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
@@ -90,4 +94,5 @@ footer { color: var(--muted); font-size: 13px; }
   .controls button { grid-column: 1 / -1; }
   .stats { grid-template-columns: 1fr 1fr; }
   .chart { height: 280px; }
+  .map { height: 380px; }
 }
